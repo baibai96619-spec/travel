@@ -3,159 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大正浪漫行程管理 App</title>
+    <title>大正浪漫行程助手</title>
     <!-- 引入 Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Vue 3 CDN -->
     <script src="unpkg.com"></script>
-    <!-- Tailwind 配置以支持自定義配色和卡片陰影 -->
+    
+    <!-- Tailwind CSS 配置，用於自定義配色（水藍、青色） -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'taisho-teal': '#008B8B', // Dark Cyan/Teal
-                        'taisho-dark': '#2F4F4F', // Dark Slate Gray
-                        'taisho-accent': '#FF4500', // Vermilion/OrangeRed for accent
-                        'taisho-bg': '#F5F5DC', // Beige/AntiqueWhite for background
-                    },
-                    boxShadow: {
-                        'romantic': '5px 5px 15px rgba(47, 79, 79, 0.4)',
+                        'taisho-blue': '#4D96FF', // 水藍色
+                        'taisho-cyan': '#00B8D9', // 青色
+                        'taisho-bg': '#E3F2FD',   // 淺背景色
+                        'taisho-card': '#FFFFFF', // 卡片背景
+                        'taisho-text': '#333333', // 主要文字色
                     }
                 }
             }
         }
     </script>
     <style>
-        /* 模擬手機 App 的滾動效果 */
-        .app-container {
-            max-width: 450px;
-            margin: auto;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        /* 確保頁面高度佔滿視窗，模擬手機 App 體驗 */
+        html, body, #app {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #E3F2FD; /* 使用大正浪漫背景色 */
+        }
+        /* 隱藏滾動條以獲得更像 App 的感覺 */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
     </style>
 </head>
-<body class="bg-gray-200">
-    <div id="app" class="app-container bg-taisho-bg font-sans">
-        <div class="flex flex-col h-screen">
+<body>
+    <div id="app" class="flex flex-col h-full antialiased">
+        
+        <!-- Header 區域 -->
+        <header class="bg-taisho-blue shadow-lg p-4 text-white flex justify-between items-center fixed top-0 left-0 right-0 z-10">
+            <h1 class="text-xl font-bold">大正浪漫 {{ currentTabTitle }}</h1>
+            <button @click="toggleMenu" class="text-white focus:outline-none">
+                <!-- 簡單的漢堡菜單圖示 -->
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </header>
+
+        <!-- 主內容區域 -->
+        <main class="flex-grow p-4 mt-16 mb-20 overflow-y-auto">
             
-            <!-- 導覽列 (Navigation Bar) -->
-            <nav class="bg-taisho-dark shadow-romantic p-4 text-white flex justify-between items-center sticky top-0 z-10">
-                <h1 class="text-xl font-bold text-taisho-bg">大正浪漫 App</h1>
-                <button class="text-taisho-bg hover:text-taisho-accent">設置</button>
-            </nav>
+            <!-- 1. 行程表功能 (v-show控制顯示) -->
+            <div v-show="currentTab === 'schedule'">
+                <h2 class="text-xl font-semibold mb-4 text-taisho-text">行程表</h2>
+                <div class="space-y-4">
+                    <div v-for="item in scheduleItems" :key="item.id" class="bg-taisho-card p-4 rounded-lg shadow-md border-l-4 border-taisho-cyan">
+                        <p class="font-bold">{{ item.time }} - {{ item.title }}</p>
+                        <p class="text-gray-600">{{ item.location }}</p>
+                    </div>
+                </div>
+            </div>
 
-            <!-- 主要內容區域 -->
-            <main class="flex-grow overflow-y-auto p-4">
-                <!-- 使用 v-if/v-show 根據當前頁面切換內容 -->
-                
-                <!-- 1. 行程表頁面 -->
-                <div v-show="currentPage === 'itinerary'">
-                    <h2 class="text-2xl font-semibold mb-4 text-taisho-dark">行程表</h2>
-                    <div class="space-y-4">
-                        <!-- 行程卡片範例 -->
-                        <div class="bg-white p-4 rounded-lg shadow-romantic border border-taisho-teal">
-                            <h3 class="font-bold text-taisho-dark">淺草漫步</h3>
-                            <p class="text-gray-600">日期: 2025年1月1日</p>
-                            <p class="text-gray-700 mt-2">探索雷門、仲見世通，體驗舊日時光。</p>
+            <!-- 2. 地圖功能 (v-show控制顯示) -->
+            <div v-show="currentTab === 'map'">
+                <h2 class="text-xl font-semibold mb-4 text-taisho-text">地圖</h2>
+                <div class="bg-taisho-card p-4 rounded-lg shadow-md h-64 flex items-center justify-center">
+                    <p class="text-gray-500">地圖功能需要外部 API (如 Google Maps)，此處為佔位符。</p>
+                </div>
+            </div>
+
+            <!-- 3. 記帳功能 (v-show控制顯示) -->
+            <div v-show="currentTab === 'accounting'">
+                <h2 class="text-xl font-semibold mb-4 text-taisho-text">記帳</h2>
+                <div class="space-y-4">
+                    <div v-for="item in accountingItems" :key="item.id" class="bg-taisho-card p-4 rounded-lg shadow-md flex justify-between items-center">
+                        <div>
+                            <p class="font-bold">{{ item.description }}</p>
+                            <p class="text-sm text-gray-500">{{ item.date }}</p>
                         </div>
-                        <div class="bg-white p-4 rounded-lg shadow-romantic border border-taisho-teal">
-                            <h3 class="font-bold text-taisho-dark">銀座購物</h3>
-                            <p class="text-gray-600">日期: 2025年1月2日</p>
-                            <p class="text-gray-700 mt-2">在百貨公司挑選特色商品。</p>
-                        </div>
+                        <p :class="{'text-red-500': item.type === 'expense', 'text-green-500': item.type === 'income'}">
+                            {{ item.amount }} JPY
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                <!-- 2. 地圖頁面 -->
-                <div v-show="currentPage === 'map'">
-                    <h2 class="text-2xl font-semibold mb-4 text-taisho-dark">地圖</h2>
-                    <!-- 模擬地圖區域 -->
-                    <div class="bg-gray-300 h-96 rounded-lg shadow-lg flex items-center justify-center border-4 border-taisho-teal">
-                        <p class="text-gray-600">地圖功能需要外部 API (如 Google Maps) 實現。</p>
+            <!-- 4. 購物清單功能 (v-show控制顯示) -->
+            <div v-show="currentTab === 'shopping'">
+                <h2 class="text-xl font-semibold mb-4 text-taisho-text">購物清單</h2>
+                <div class="space-y-4">
+                    <div v-for="item in shoppingItems" :key="item.id" class="bg-taisho-card p-4 rounded-lg shadow-md flex items-center">
+                        <input type="checkbox" :checked="item.purchased" class="mr-4 h-5 w-5 text-taisho-cyan rounded" @change="togglePurchased(item.id)">
+                        <span :class="{'line-through text-gray-500': item.purchased, 'text-taisho-text': !item.purchased}">
+                            {{ item.name }}
+                        </span>
                     </div>
                 </div>
+            </div>
 
-                <!-- 3. 記帳功能頁面 -->
-                <div v-show="currentPage === 'accounting'">
-                    <h2 class="text-2xl font-semibold mb-4 text-taisho-dark">記帳本</h2>
-                    <div class="bg-white p-4 rounded-lg shadow-romantic border border-taisho-teal">
-                        <p class="text-gray-700">總支出: <span class="text-taisho-accent font-bold">¥ 15,000</span></p>
-                        <ul class="mt-2 space-y-1">
-                            <li class="flex justify-between">
-                                <span>餐飲</span>
-                                <span>¥ 5,000</span>
-                            </li>
-                            <li class="flex justify-between">
-                                <span>交通</span>
-                                <span>¥ 3,000</span>
-                            </li>
-                            <li class="flex justify-between">
-                                <span>購物</span>
-                                <span>¥ 7,000</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        </main>
 
-                <!-- 4. 購物清單頁面 -->
-                <div v-show="currentPage === 'shopping'">
-                    <h2 class="text-2xl font-semibold mb-4 text-taisho-dark">購物清單</h2>
-                    <div class="bg-white p-4 rounded-lg shadow-romantic border border-taisho-teal">
-                        <ul class="space-y-2">
-                            <li class="flex items-center">
-                                <input type="checkbox" checked class="form-checkbox h-4 w-4 text-taisho-teal rounded mr-3">
-                                <span>和服</span>
-                            </li>
-                            <li class="flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-taisho-teal rounded mr-3">
-                                <span>抹茶點心</span>
-                            </li>
-                            <li class="flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-taisho-teal rounded mr-3">
-                                <span>木屐</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </main>
-
-            <!-- 底部導覽列 (Bottom Navigation) -->
-            <footer class="bg-taisho-dark shadow-inner p-2">
-                <div class="flex justify-around">
-                    <button @click="currentPage = 'itinerary'" :class="{'text-taisho-accent': currentPage === 'itinerary', 'text-white': currentPage !== 'itinerary'}" class="p-2 flex flex-col items-center">
-                        <span class="text-xl">📅</span>
-                        <span class="text-xs">行程</span>
-                    </button>
-                    <button @click="currentPage = 'map'" :class="{'text-taisho-accent': currentPage === 'map', 'text-white': currentPage !== 'map'}" class="p-2 flex flex-col items-center">
-                        <span class="text-xl">🗺️</span>
-                        <span class="text-xs">地圖</span>
-                    </button>
-                    <button @click="currentPage = 'accounting'" :class="{'text-taisho-accent': currentPage === 'accounting', 'text-white': currentPage !== 'accounting'}" class="p-2 flex flex-col items-center">
-                        <span class="text-xl">💰</span>
-                        <span class="text-xs">記帳</span>
-                    </button>
-                    <button @click="currentPage = 'shopping'" :class="{'text-taisho-accent': currentPage === 'shopping', 'text-white': currentPage !== 'shopping'}" class="p-2 flex flex-col items-center">
-                        <span class="text-xl">🛍️</span>
-                        <span class="text-xs">購物</span>
-                    </button>
-                </div>
-            </footer>
-        </div>
+        <!-- 底部導航欄 (模擬手機 App) -->
+        <nav class="bg-taisho-card shadow-inner p-2 flex justify-around fixed bottom-0 left-0 right-0">
+            <button @click="currentTab = 'schedule'" :class="{'text-taisho-blue border-b-2 border-taisho-blue': currentTab === 'schedule', 'text-gray-500': currentTab !== 'schedule'}" class="p-2 flex-1 focus:outline-none">
+                行程
+            </button>
+            <button @click="currentTab = 'map'" :class="{'text-taisho-blue border-b-2 border-taisho-blue': currentTab === 'map', 'text-gray-500': currentTab !== 'map'}" class="p-2 flex-1 focus:outline-none">
+                地圖
+            </button>
+            <button @click="currentTab = 'accounting'" :class="{'text-taisho-blue border-b-2 border-taisho-blue': currentTab === 'accounting', 'text-gray-500': currentTab !== 'accounting'}" class="p-2 flex-1 focus:outline-none">
+                記帳
+            </button>
+            <button @click="currentTab = 'shopping'" :class="{'text-taisho-blue border-b-2 border-taisho-blue': currentTab === 'shopping', 'text-gray-500': currentTab !== 'shopping'}" class="p-2 flex-1 focus:outline-none">
+                購物
+            </button>
+        </nav>
     </div>
 
-    <!-- Vue 腳本 -->
+    <!-- Vue 實例化腳本 -->
     <script>
-        const { createApp, ref } = Vue;
+        const { createApp, ref, computed } = Vue;
 
         createApp({
             setup() {
-                // 使用 ref 來追蹤當前顯示的頁面
-                const currentPage = ref('itinerary'); // 默認顯示行程表
+                const currentTab = ref('schedule');
+                const menuOpen = ref(false);
+
+                const scheduleItems = ref([
+                    { id: 1, time: '09:00', title: '參觀淺草寺', location: '東京都台東區', completed: false },
+                    { id: 2, time: '12:00', title: '午餐：鰻魚飯', location: '淺草附近餐廳', completed: false },
+                    { id: 3, time: '15:00', title: '漫步隅田川公園', location: '隅田川旁', completed: false },
+                ]);
+
+                const accountingItems = ref([
+                    { id: 1, date: '2025-01-01', description: '機票費用', amount: 15000, type: 'expense' },
+                    { id: 2, date: '2025-01-02', description: '住宿費用', amount: 8000, type: 'expense' },
+                    { id: 3, date: '2025-01-03', description: '薪水入帳', amount: 30000, type: 'income' },
+                ]);
+
+                const shoppingItems = ref([
+                    { id: 1, name: '和服腰帶', purchased: false },
+                    { id: 2, name: '抹茶粉', purchased: true },
+                    { id: 3, name: '木屐', purchased: false },
+                ]);
+
+                const currentTabTitle = computed(() => {
+                    switch (currentTab.value) {
+                        case 'schedule': return '行程表';
+                        case 'map': return '地圖';
+                        case 'accounting': return '記帳本';
+                        case 'shopping': return '購物清單';
+                        default: return '應用程式';
+                    }
+                });
+
+                const toggleMenu = () => {
+                    menuOpen.value = !menuOpen.value;
+                };
+
+                const togglePurchased = (id) => {
+                    const item = shoppingItems.value.find(i => i.id === id);
+                    if (item) {
+                        item.purchased = !item.purchased;
+                    }
+                };
 
                 return {
-                    currentPage
+                    currentTab,
+                    menuOpen,
+                    scheduleItems,
+                    accountingItems,
+                    shoppingItems,
+                    currentTabTitle,
+                    toggleMenu,
+                    togglePurchased
                 };
             }
         }).mount('#app');
